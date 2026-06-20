@@ -23,6 +23,13 @@ export interface Place {
   blurb?: string;
 }
 
+/** Camera overrides for a flyTo animation. */
+export interface CameraOverride {
+  zoom?: number;
+  pitch?: number;
+  bearing?: number;
+}
+
 /** One beat in the guided story tour. */
 export interface TourStep {
   /** Which place this step focuses on (must match a Place id). */
@@ -30,11 +37,7 @@ export interface TourStep {
   /** Play-by-play narrative text for this beat (supports plain text). */
   narrative: string;
   /** Optional camera overrides for the flyTo animation. */
-  camera?: {
-    zoom?: number;
-    pitch?: number;
-    bearing?: number;
-  };
+  camera?: CameraOverride;
 }
 
 /** The whole experience: the places and the ordered tour through them. */

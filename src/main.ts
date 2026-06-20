@@ -4,6 +4,20 @@ import "./style.css";
 import { tour } from "./data/tour";
 import type { Place } from "./types";
 
+function getEl<T extends HTMLElement>(id: string): T {
+  const el = document.getElementById(id);
+  if (!el) throw new Error(`Missing element: #${id}`);
+  return el as T;
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 // --- Basemap: OpenStreetMap raster tiles, no API key needed. ---
 const map = new maplibregl.Map({
   container: "map",
@@ -32,9 +46,9 @@ const placeById = new Map<string, Place>(tour.places.map((p) => [p.id, p]));
 const markerEls = new Map<string, HTMLElement>();
 
 // --- Panel elements ---
-const panel = document.getElementById("panel")!;
-const panelContent = document.getElementById("panel-content")!;
-document.getElementById("panel-close")!.addEventListener("click", closePanel);
+const panel = getEl("panel");
+const panelContent = getEl("panel-content");
+getEl("panel-close").addEventListener("click", closePanel);
 
 /**
  * Resolve a photo path against the deploy base. Local paths like
@@ -52,9 +66,9 @@ function renderPhotos(place: Place): string {
     .map(
       (photo) => `
       <figure>
-        <img src="${resolveSrc(photo.src)}" alt="${photo.alt ?? photo.caption ?? place.name}"
+        <img src="${escapeHtml(resolveSrc(photo.src))}" alt="${escapeHtml(photo.alt ?? photo.caption ?? place.name)}"
              onerror="this.style.visibility='hidden'" />
-        ${photo.caption ? `<figcaption>${photo.caption}</figcaption>` : ""}
+        ${photo.caption ? `<figcaption>${escapeHtml(photo.caption)}</figcaption>` : ""}
       </figure>`,
     )
     .join("");
@@ -63,10 +77,10 @@ function renderPhotos(place: Place): string {
 /** Open the panel for a place, optionally with tour narrative text. */
 function openPanel(place: Place, narrative?: string) {
   panelContent.innerHTML = `
-    <h2>${place.name}</h2>
-    ${place.blurb ? `<p class="blurb">${place.blurb}</p>` : ""}
+    <h2>${escapeHtml(place.name)}</h2>
+    ${place.blurb ? `<p class="blurb">${escapeHtml(place.blurb)}</p>` : ""}
     ${renderPhotos(place)}
-    ${narrative ? `<p class="narrative">${narrative}</p>` : ""}
+    ${narrative ? `<p class="narrative">${escapeHtml(narrative)}</p>` : ""}
   `;
   panel.classList.remove("hidden");
 }
@@ -100,20 +114,20 @@ function setActiveMarker(placeId: string | null) {
 // ----------------------------------------------------------------------------
 // Guided story tour
 // ----------------------------------------------------------------------------
-const tourStartBtn = document.getElementById("tour-start")!;
-const tourNav = document.getElementById("tour-nav")!;
-const tourProgress = document.getElementById("tour-progress")!;
-const tourPrevBtn = document.getElementById("tour-prev")!;
-const tourNextBtn = document.getElementById("tour-next")!;
-const tourExitBtn = document.getElementById("tour-exit")!;
+const tourStartBtn = getEl("tour-start");
+const tourNav = getEl("tour-nav");
+const tourProgress = getEl("tour-progress");
+const tourPrevBtn = getEl("tour-prev");
+const tourNextBtn = getEl("tour-next");
+const tourExitBtn = getEl("tour-exit");
 
 let stepIndex = -1;
 
 function goToStep(index: number) {
-  if (index < 0 || index >= tour.steps.length) return;
+  const step = tour.steps[index];
+  if (!step) return;
   stepIndex = index;
 
-  const step = tour.steps[index];
   const place = placeById.get(step.placeId);
   if (!place) {
     console.warn(`Tour step references unknown placeId: ${step.placeId}`);
