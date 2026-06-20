@@ -36,12 +36,23 @@ const panel = document.getElementById("panel")!;
 const panelContent = document.getElementById("panel-content")!;
 document.getElementById("panel-close")!.addEventListener("click", closePanel);
 
+/**
+ * Resolve a photo path against the deploy base. Local paths like
+ * "/photos/x.jpg" or "photos/x.jpg" become "<base>photos/x.jpg" so they work
+ * both at the site root and under a GitHub Pages subpath. Full http(s) URLs
+ * are left untouched.
+ */
+function resolveSrc(src: string): string {
+  if (/^https?:\/\//.test(src)) return src;
+  return import.meta.env.BASE_URL + src.replace(/^\//, "");
+}
+
 function renderPhotos(place: Place): string {
   return place.photos
     .map(
       (photo) => `
       <figure>
-        <img src="${photo.src}" alt="${photo.alt ?? photo.caption ?? place.name}"
+        <img src="${resolveSrc(photo.src)}" alt="${photo.alt ?? photo.caption ?? place.name}"
              onerror="this.style.visibility='hidden'" />
         ${photo.caption ? `<figcaption>${photo.caption}</figcaption>` : ""}
       </figure>`,
